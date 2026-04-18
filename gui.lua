@@ -1,5 +1,5 @@
 -- Modern GUI Library for Roblox Executors
--- Inspired by Model Executor v3.2 design
+-- Сворачивание в мини-кнопку, градиенты, анимации
 -- Сохраните как ModuleScript
 
 local Library = {}
@@ -69,6 +69,8 @@ function Library:CreateWindow(config)
     MainFrame.Visible = false
     MainFrame.ClipsDescendants = true
 
+    local originalSize = MainFrame.Size
+
     local mainCorner = Instance.new("UICorner")
     mainCorner.CornerRadius = UDim.new(0, 10)
     mainCorner.Parent = MainFrame
@@ -99,95 +101,34 @@ function Library:CreateWindow(config)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.TextStrokeTransparency = 0.8
 
--- Кнопки управления
-local function createWindowButton(text, color, positionOffset, callback)
-    local btn = Instance.new("TextButton")
-    btn.Parent = TitleBar
-    btn.BackgroundColor3 = color
-    btn.BorderSizePixel = 0
-    btn.Size = UDim2.new(0, 30, 0, 30)
-    btn.Position = UDim2.new(1, positionOffset, 0.5, -15)
-    btn.Font = Enum.Font.GothamBold
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 18
-    btn.AutoButtonColor = false
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 6)
-    corner.Parent = btn
+    -- Кнопки управления
+    local function createWindowButton(text, color, positionOffset, callback)
+        local btn = Instance.new("TextButton")
+        btn.Parent = TitleBar
+        btn.BackgroundColor3 = color
+        btn.BorderSizePixel = 0
+        btn.Size = UDim2.new(0, 30, 0, 30)
+        btn.Position = UDim2.new(1, positionOffset, 0.5, -15)
+        btn.Font = Enum.Font.GothamBold
+        btn.Text = text
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.TextSize = 18
+        btn.AutoButtonColor = false
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = btn
 
-    btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, FAST_TWEEN, {BackgroundColor3 = color:Lerp(Color3.fromRGB(255,255,255), 0.2)}):Play()
-    end)
-    btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, FAST_TWEEN, {BackgroundColor3 = color}):Play()
-    end)
-    btn.MouseButton1Click:Connect(callback)
-    return btn
-end
-
--- Мини-кнопка (создаётся заранее, но будет показана при сворачивании)
-local MiniButton
-if minimizable then
-    MiniButton = Instance.new("TextButton")
-    MiniButton.Name = "MiniButton"
-    MiniButton.Parent = ScreenGui
-    MiniButton.BackgroundColor3 = themeColor
-    MiniButton.BorderSizePixel = 0
-    MiniButton.Size = UDim2.new(0, 54, 0, 54)
-    MiniButton.Position = UDim2.new(0.1, 0, 0.8, 0)
-    MiniButton.Text = ""
-    MiniButton.AutoButtonColor = false
-    MiniButton.Visible = false
-    MiniButton.Active = true
-    MiniButton.Draggable = true
-    MiniButton.ZIndex = 10
-
-    local miniCorner = Instance.new("UICorner")
-    miniCorner.CornerRadius = UDim.new(0, 12)
-    miniCorner.Parent = MiniButton
-
-    createGradient(MiniButton, themeColor, accentColor, 135)
-    createShadow(MiniButton, 0.6, 9)
-
-    MiniButton.MouseEnter:Connect(function()
-        TweenService:Create(MiniButton, FAST_TWEEN, {BackgroundColor3 = themeColor:Lerp(Color3.fromRGB(255,255,255), 0.2)}):Play()
-    end)
-    MiniButton.MouseLeave:Connect(function()
-        TweenService:Create(MiniButton, FAST_TWEEN, {BackgroundColor3 = themeColor}):Play()
-    end)
-
-    -- При клике на мини-кнопку показываем главное окно и скрываем мини-кнопку
-    MiniButton.MouseButton1Click:Connect(function()
-        MainFrame.Visible = true
-        MiniButton.Visible = false
-        -- Анимация появления главного окна
-        MainFrame.Size = UDim2.new(0, 0, 0, 0)
-        TweenService:Create(MainFrame, TWEEN_INFO, {Size = originalSize}):Play()
-    end)
-end
-
--- Кнопка сворачивания (скрывает окно и показывает мини-кнопку)
-local MinimizeButton = createWindowButton("−", Color3.fromRGB(255, 180, 40), -75, function()
-    if minimizable and MiniButton then
-        MainFrame.Visible = false
-        MiniButton.Visible = true
-        -- Анимация появления мини-кнопки
-        MiniButton.Size = UDim2.new(0, 0, 0, 0)
-        TweenService:Create(MiniButton, TWEEN_INFO, {Size = UDim2.new(0, 54, 0, 54)}):Play()
+        btn.MouseEnter:Connect(function()
+            TweenService:Create(btn, FAST_TWEEN, {BackgroundColor3 = color:Lerp(Color3.fromRGB(255,255,255), 0.2)}):Play()
+        end)
+        btn.MouseLeave:Connect(function()
+            TweenService:Create(btn, FAST_TWEEN, {BackgroundColor3 = color}):Play()
+        end)
+        btn.MouseButton1Click:Connect(callback)
+        return btn
     end
-end)
 
--- Кнопка закрытия (полностью удаляет GUI)
-local CloseButton = createWindowButton("✕", Color3.fromRGB(255, 80, 80), -40, function()
-    ScreenGui:Destroy()
-end)
-    
-    -- Переменные для вкладок
-    local tabs = {}
-    local activeTab = nil
-
-    -- Мини-кнопка (как в примере)
+    -- Мини-кнопка (создаётся заранее, показывается при сворачивании)
     local MiniButton
     if minimizable then
         MiniButton = Instance.new("TextButton")
@@ -217,14 +158,77 @@ end)
         MiniButton.MouseLeave:Connect(function()
             TweenService:Create(MiniButton, FAST_TWEEN, {BackgroundColor3 = themeColor}):Play()
         end)
+
+        -- При клике на мини-кнопку показываем главное окно и скрываем мини-кнопку
         MiniButton.MouseButton1Click:Connect(function()
             MainFrame.Visible = true
             MiniButton.Visible = false
-            -- Анимация появления
+            -- Анимация появления главного окна
             MainFrame.Size = UDim2.new(0, 0, 0, 0)
             TweenService:Create(MainFrame, TWEEN_INFO, {Size = originalSize}):Play()
         end)
     end
+
+    -- Кнопка сворачивания (скрывает окно и показывает мини-кнопку)
+    local MinimizeButton = createWindowButton("−", Color3.fromRGB(255, 180, 40), -75, function()
+        if minimizable and MiniButton then
+            MainFrame.Visible = false
+            MiniButton.Visible = true
+            -- Анимация появления мини-кнопки
+            MiniButton.Size = UDim2.new(0, 0, 0, 0)
+            TweenService:Create(MiniButton, TWEEN_INFO, {Size = UDim2.new(0, 54, 0, 54)}):Play()
+        end
+    end)
+
+    -- Кнопка закрытия (полностью удаляет GUI)
+    local CloseButton = createWindowButton("✕", Color3.fromRGB(255, 80, 80), -40, function()
+        ScreenGui:Destroy()
+    end)
+
+    -- Панель вкладок (слева)
+    local TabPanel = Instance.new("Frame")
+    TabPanel.Name = "TabPanel"
+    TabPanel.Parent = MainFrame
+    TabPanel.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    TabPanel.BorderSizePixel = 0
+    TabPanel.Size = UDim2.new(0, 150, 1, -45)
+    TabPanel.Position = UDim2.new(0, 0, 0, 45)
+    local tabCorner = Instance.new("UICorner")
+    tabCorner.CornerRadius = UDim.new(0, 10)
+    tabCorner.Parent = TabPanel
+
+    local TabList = Instance.new("UIListLayout")
+    TabList.Padding = UDim.new(0, 8)
+    TabList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    TabList.SortOrder = Enum.SortOrder.LayoutOrder
+    TabList.Parent = TabPanel
+
+    local TabPadding = Instance.new("UIPadding")
+    TabPadding.PaddingTop = UDim.new(0, 15)
+    TabPadding.Parent = TabPanel
+
+    -- Область контента
+    local ContentArea = Instance.new("Frame")
+    ContentArea.Name = "ContentArea"
+    ContentArea.Parent = MainFrame
+    ContentArea.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    ContentArea.BorderSizePixel = 0
+    ContentArea.Size = UDim2.new(1, -150, 1, -45)
+    ContentArea.Position = UDim2.new(0, 150, 0, 45)
+    local contentCorner = Instance.new("UICorner")
+    contentCorner.CornerRadius = UDim.new(0, 10)
+    contentCorner.Parent = ContentArea
+
+    local ContentPadding = Instance.new("UIPadding")
+    ContentPadding.PaddingLeft = UDim.new(0, 15)
+    ContentPadding.PaddingRight = UDim.new(0, 15)
+    ContentPadding.PaddingTop = UDim.new(0, 15)
+    ContentPadding.PaddingBottom = UDim.new(0, 15)
+    ContentPadding.Parent = ContentArea
+
+    -- Переменные для вкладок
+    local tabs = {}
+    local activeTab = nil
 
     -- Функция создания вкладки
     function Library:CreateTab(tabName, iconId)
@@ -772,18 +776,6 @@ end)
     MainFrame.Size = UDim2.new(0, 0, 0, 0)
     MainFrame.Visible = true
     TweenService:Create(MainFrame, TWEEN_INFO, {Size = originalSize}):Play()
-
-    -- Показать мини-кнопку при закрытии
-    if minimizable then
-        CloseButton.MouseButton1Click:Connect(function()
-            if MiniButton then
-                MiniButton.Visible = true
-                -- Анимация появления мини-кнопки
-                MiniButton.Size = UDim2.new(0, 0, 0, 0)
-                TweenService:Create(MiniButton, TWEEN_INFO, {Size = UDim2.new(0, 54, 0, 54)}):Play()
-            end
-        end)
-    end
 
     return Library
 end
