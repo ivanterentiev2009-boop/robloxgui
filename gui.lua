@@ -1,220 +1,258 @@
--- Beautiful Roblox GUI Library v2.0
--- Улучшенный дизайн с градиентами, анимациями и размытием фона
+-- Modern GUI Library for Roblox Executors
+-- Inspired by Model Executor v3.2 design
+-- Сохраните как ModuleScript
 
-local BeautifulLibrary = {}
+local Library = {}
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 
--- Константы для анимаций
-local TWEEN_INFO = TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+-- Анимационные константы
+local TWEEN_INFO = TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
 local FAST_TWEEN = TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 
--- Вспомогательная функция для создания градиента (UIGradient)
+-- Вспомогательные функции
 local function createGradient(parent, color1, color2, rotation)
-    local gradient = Instance.new("UIGradient")
-    gradient.Color = ColorSequence.new({
+    local grad = Instance.new("UIGradient")
+    grad.Color = ColorSequence.new({
         ColorSequenceKeypoint.new(0, color1),
         ColorSequenceKeypoint.new(1, color2)
     })
-    gradient.Rotation = rotation or 45
-    gradient.Parent = parent
-    return gradient
+    grad.Rotation = rotation or 135
+    grad.Parent = parent
+    return grad
 end
 
--- Основная функция создания окна
-function BeautifulLibrary:CreateWindow(config)
-    config = config or {}
-    local WindowName = config.Name or "Beautiful Cheats"
-    local ThemeColor = config.ThemeColor or Color3.fromRGB(255, 100, 150)
-    local AccentColor = config.AccentColor or Color3.fromRGB(100, 150, 255)
-    local BackgroundBlur = config.BackgroundBlur ~= false -- по умолчанию размытие включено
+local function createShadow(parent, transparency, zIndex)
+    local shadow = Instance.new("Frame")
+    shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    shadow.BackgroundTransparency = transparency or 0.6
+    shadow.BorderSizePixel = 0
+    shadow.Size = UDim2.new(1, 20, 1, 20)
+    shadow.Position = UDim2.new(0, -10, 0, -10)
+    shadow.ZIndex = zIndex or (parent.ZIndex - 1)
+    shadow.Parent = parent
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, parent:FindFirstChildOfClass("UICorner") and parent.UICorner.CornerRadius.Offset + 4 or 16)
+    corner.Parent = shadow
+    return shadow
+end
 
-    -- Создаём ScreenGui
+-- Главная функция создания окна
+function Library:CreateWindow(config)
+    config = config or {}
+    local windowName = config.Name or "Modern Hub"
+    local themeColor = config.ThemeColor or Color3.fromRGB(80, 120, 255)
+    local accentColor = config.AccentColor or Color3.fromRGB(60, 90, 200)
+    local minimizable = config.Minimizable ~= false
+    local draggable = config.Draggable ~= false
+
+    -- ScreenGui
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = WindowName .. "_GUI"
+    ScreenGui.Name = windowName .. "_GUI"
     ScreenGui.Parent = CoreGui
     ScreenGui.ResetOnSpawn = false
     ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    -- Эффект размытия фона
-    if BackgroundBlur then
-        local Blur = Instance.new("BlurEffect")
-        Blur.Size = 10
-        Blur.Parent = game:GetService("Lighting")
-        -- Удаляем размытие при закрытии GUI (можно добавить метод :Destroy())
-        ScreenGui.Destroying:Connect(function()
-            Blur:Destroy()
-        end)
-    end
-
     -- Главное окно
     local MainFrame = Instance.new("Frame")
-    MainFrame.Name = "MainFrame"
-    MainFrame.Size = UDim2.new(0, 550, 0, 400)
-    MainFrame.Position = UDim2.new(0.5, -275, 0.5, -200)
-    MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
-    MainFrame.BackgroundTransparency = 0.05
-    MainFrame.BorderSizePixel = 0
-    MainFrame.ClipsDescendants = true
+    MainFrame.Name = "Main"
     MainFrame.Parent = ScreenGui
+    MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    MainFrame.BorderSizePixel = 0
+    MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    MainFrame.Size = UDim2.new(0, 550, 0, 380)
+    MainFrame.Active = draggable
+    MainFrame.Draggable = draggable
+    MainFrame.Visible = false
+    MainFrame.ClipsDescendants = true
 
-    -- Скругление углов
-    local MainCorner = Instance.new("UICorner")
-    MainCorner.CornerRadius = UDim.new(0, 16)
-    MainCorner.Parent = MainFrame
+    local mainCorner = Instance.new("UICorner")
+    mainCorner.CornerRadius = UDim.new(0, 10)
+    mainCorner.Parent = MainFrame
 
-    -- Тень окна
-    local Shadow = Instance.new("ImageLabel")
-    Shadow.AnchorPoint = Vector2.new(0.5, 0.5)
-    Shadow.BackgroundTransparency = 1
-    Shadow.Position = UDim2.new(0.5, 0, 0.5, 0)
-    Shadow.Size = UDim2.new(1, 40, 1, 40)
-    Shadow.ZIndex = 0
-    Shadow.Image = "rbxassetid://6014261993"
-    Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    Shadow.ImageTransparency = 0.6
-    Shadow.ScaleType = Enum.ScaleType.Slice
-    Shadow.SliceCenter = Rect.new(49, 49, 49, 49)
-    Shadow.SliceScale = 0.5
-    Shadow.Parent = MainFrame
+    createShadow(MainFrame, 0.7, 0)
 
-    -- Градиентный заголовок
+    -- Заголовок (градиентный)
     local TitleBar = Instance.new("Frame")
     TitleBar.Name = "TitleBar"
-    TitleBar.Size = UDim2.new(1, 0, 0, 50)
-    TitleBar.BackgroundColor3 = ThemeColor
-    TitleBar.BorderSizePixel = 0
     TitleBar.Parent = MainFrame
+    TitleBar.BackgroundColor3 = themeColor
+    TitleBar.BorderSizePixel = 0
+    TitleBar.Size = UDim2.new(1, 0, 0, 45)
+    local titleCorner = Instance.new("UICorner")
+    titleCorner.CornerRadius = UDim.new(0, 10)
+    titleCorner.Parent = TitleBar
+    createGradient(TitleBar, themeColor, accentColor, 135)
 
-    local TitleCorner = Instance.new("UICorner")
-    TitleCorner.CornerRadius = UDim.new(0, 16)
-    TitleCorner.Parent = TitleBar
-
-    createGradient(TitleBar, ThemeColor, AccentColor, 135)
-
-    -- Название окна
     local TitleLabel = Instance.new("TextLabel")
-    TitleLabel.Size = UDim2.new(1, -60, 1, 0)
-    TitleLabel.Position = UDim2.new(0, 20, 0, 0)
-    TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = WindowName
-    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    TitleLabel.Font = Enum.Font.GothamBold
-    TitleLabel.TextSize = 20
-    TitleLabel.TextStrokeTransparency = 0.8
     TitleLabel.Parent = TitleBar
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Size = UDim2.new(1, -100, 1, 0)
+    TitleLabel.Position = UDim2.new(0, 20, 0, 0)
+    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.Text = windowName
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TitleLabel.TextSize = 18
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.TextStrokeTransparency = 0.8
 
-    -- Кнопка сворачивания
-    local MinimizeButton = Instance.new("ImageButton")
-    MinimizeButton.Size = UDim2.new(0, 30, 0, 30)
-    MinimizeButton.Position = UDim2.new(1, -40, 0.5, -15)
-    MinimizeButton.BackgroundTransparency = 1
-    MinimizeButton.Image = "rbxassetid://6035067836" -- иконка стрелки вниз
-    MinimizeButton.ImageColor3 = Color3.fromRGB(255, 255, 255)
-    MinimizeButton.Parent = TitleBar
+    -- Кнопки управления
+    local function createWindowButton(text, color, positionOffset, callback)
+        local btn = Instance.new("TextButton")
+        btn.Parent = TitleBar
+        btn.BackgroundColor3 = color
+        btn.BorderSizePixel = 0
+        btn.Size = UDim2.new(0, 30, 0, 30)
+        btn.Position = UDim2.new(1, positionOffset, 0.5, -15)
+        btn.Font = Enum.Font.GothamBold
+        btn.Text = text
+        btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        btn.TextSize = 18
+        btn.AutoButtonColor = false
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = btn
+
+        btn.MouseEnter:Connect(function()
+            TweenService:Create(btn, FAST_TWEEN, {BackgroundColor3 = color:Lerp(Color3.fromRGB(255,255,255), 0.2)}):Play()
+        end)
+        btn.MouseLeave:Connect(function()
+            TweenService:Create(btn, FAST_TWEEN, {BackgroundColor3 = color}):Play()
+        end)
+        btn.MouseButton1Click:Connect(callback)
+        return btn
+    end
 
     local isMinimized = false
     local originalSize = MainFrame.Size
-    local minimizedSize = UDim2.new(0, 550, 0, 50)
+    local minimizedSize = UDim2.new(0, 550, 0, 45)
 
-    MinimizeButton.MouseButton1Click:Connect(function()
-        isMinimized = not isMinimized
-        local targetSize = isMinimized and minimizedSize or originalSize
-        TweenService:Create(MainFrame, TWEEN_INFO, {Size = targetSize}):Play()
-        MinimizeButton.Image = isMinimized and "rbxassetid://6035047409" or "rbxassetid://6035067836"
-        ContentContainer.Visible = not isMinimized
-        TabContainer.Visible = not isMinimized
+    local MinimizeButton = createWindowButton("−", Color3.fromRGB(255, 180, 40), -75, function()
+        if minimizable then
+            isMinimized = not isMinimized
+            local targetSize = isMinimized and minimizedSize or originalSize
+            TweenService:Create(MainFrame, TWEEN_INFO, {Size = targetSize}):Play()
+            MinimizeButton.Text = isMinimized and "+" or "−"
+            ContentArea.Visible = not isMinimized
+            TabPanel.Visible = not isMinimized
+        end
     end)
 
-    -- Контейнер вкладок
-    local TabContainer = Instance.new("Frame")
-    TabContainer.Name = "TabContainer"
-    TabContainer.Size = UDim2.new(0, 130, 1, -50)
-    TabContainer.Position = UDim2.new(0, 0, 0, 50)
-    TabContainer.BackgroundColor3 = Color3.fromRGB(25, 25, 32)
-    TabContainer.BackgroundTransparency = 0.2
-    TabContainer.BorderSizePixel = 0
-    TabContainer.Parent = MainFrame
+    local CloseButton = createWindowButton("✕", Color3.fromRGB(255, 80, 80), -40, function()
+        if MiniButton then
+            MiniButton.Visible = true
+        end
+        MainFrame.Visible = false
+    end)
+
+    -- Панель вкладок (слева)
+    local TabPanel = Instance.new("Frame")
+    TabPanel.Name = "TabPanel"
+    TabPanel.Parent = MainFrame
+    TabPanel.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+    TabPanel.BorderSizePixel = 0
+    TabPanel.Size = UDim2.new(0, 150, 1, -45)
+    TabPanel.Position = UDim2.new(0, 0, 0, 45)
+    local tabCorner = Instance.new("UICorner")
+    tabCorner.CornerRadius = UDim.new(0, 10)
+    tabCorner.Parent = TabPanel
 
     local TabList = Instance.new("UIListLayout")
     TabList.Padding = UDim.new(0, 8)
     TabList.HorizontalAlignment = Enum.HorizontalAlignment.Center
     TabList.SortOrder = Enum.SortOrder.LayoutOrder
-    TabList.Parent = TabContainer
+    TabList.Parent = TabPanel
 
     local TabPadding = Instance.new("UIPadding")
     TabPadding.PaddingTop = UDim.new(0, 15)
-    TabPadding.Parent = TabContainer
+    TabPadding.Parent = TabPanel
 
-    -- Контейнер контента
-    local ContentContainer = Instance.new("Frame")
-    ContentContainer.Name = "ContentContainer"
-    ContentContainer.Size = UDim2.new(1, -130, 1, -50)
-    ContentContainer.Position = UDim2.new(0, 130, 0, 50)
-    ContentContainer.BackgroundTransparency = 1
-    ContentContainer.BorderSizePixel = 0
-    ContentContainer.Parent = MainFrame
+    -- Область контента
+    local ContentArea = Instance.new("Frame")
+    ContentArea.Name = "ContentArea"
+    ContentArea.Parent = MainFrame
+    ContentArea.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    ContentArea.BorderSizePixel = 0
+    ContentArea.Size = UDim2.new(1, -150, 1, -45)
+    ContentArea.Position = UDim2.new(0, 150, 0, 45)
+    local contentCorner = Instance.new("UICorner")
+    contentCorner.CornerRadius = UDim.new(0, 10)
+    contentCorner.Parent = ContentArea
 
     local ContentPadding = Instance.new("UIPadding")
     ContentPadding.PaddingLeft = UDim.new(0, 15)
     ContentPadding.PaddingRight = UDim.new(0, 15)
     ContentPadding.PaddingTop = UDim.new(0, 15)
     ContentPadding.PaddingBottom = UDim.new(0, 15)
-    ContentPadding.Parent = ContentContainer
+    ContentPadding.Parent = ContentArea
 
-    -- Перетаскивание окна
-    local dragging, dragStart, frameStart
-    TitleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            frameStart = MainFrame.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                end
-            end)
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            MainFrame.Position = UDim2.new(
-                frameStart.X.Scale, frameStart.X.Offset + delta.X,
-                frameStart.Y.Scale, frameStart.Y.Offset + delta.Y
-            )
-        end
-    end)
-
-    -- Хранилище вкладок и секций
+    -- Переменные для вкладок
     local tabs = {}
     local activeTab = nil
 
+    -- Мини-кнопка (как в примере)
+    local MiniButton
+    if minimizable then
+        MiniButton = Instance.new("TextButton")
+        MiniButton.Name = "MiniButton"
+        MiniButton.Parent = ScreenGui
+        MiniButton.BackgroundColor3 = themeColor
+        MiniButton.BorderSizePixel = 0
+        MiniButton.Size = UDim2.new(0, 54, 0, 54)
+        MiniButton.Position = UDim2.new(0.1, 0, 0.8, 0)
+        MiniButton.Text = ""
+        MiniButton.AutoButtonColor = false
+        MiniButton.Visible = false
+        MiniButton.Active = true
+        MiniButton.Draggable = true
+        MiniButton.ZIndex = 10
+
+        local miniCorner = Instance.new("UICorner")
+        miniCorner.CornerRadius = UDim.new(0, 12)
+        miniCorner.Parent = MiniButton
+
+        createGradient(MiniButton, themeColor, accentColor, 135)
+        createShadow(MiniButton, 0.6, 9)
+
+        MiniButton.MouseEnter:Connect(function()
+            TweenService:Create(MiniButton, FAST_TWEEN, {BackgroundColor3 = themeColor:Lerp(Color3.fromRGB(255,255,255), 0.2)}):Play()
+        end)
+        MiniButton.MouseLeave:Connect(function()
+            TweenService:Create(MiniButton, FAST_TWEEN, {BackgroundColor3 = themeColor}):Play()
+        end)
+        MiniButton.MouseButton1Click:Connect(function()
+            MainFrame.Visible = true
+            MiniButton.Visible = false
+            -- Анимация появления
+            MainFrame.Size = UDim2.new(0, 0, 0, 0)
+            TweenService:Create(MainFrame, TWEEN_INFO, {Size = originalSize}):Play()
+        end)
+    end
+
     -- Функция создания вкладки
-    function BeautifulLibrary:CreateTab(tabName, iconId)
+    function Library:CreateTab(tabName, iconId)
         local tabButton = Instance.new("TextButton")
         tabButton.Name = tabName .. "_Tab"
-        tabButton.Size = UDim2.new(1, -20, 0, 45)
-        tabButton.BackgroundColor3 = AccentColor
-        tabButton.BackgroundTransparency = 0.85
+        tabButton.Parent = TabPanel
+        tabButton.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
         tabButton.BorderSizePixel = 0
+        tabButton.Size = UDim2.new(1, -20, 0, 42)
         tabButton.Text = ""
         tabButton.AutoButtonColor = false
-        tabButton.Parent = TabContainer
+        tabButton.ZIndex = 2
 
-        local tabCorner = Instance.new("UICorner")
-        tabCorner.CornerRadius = UDim.new(0, 10)
-        tabCorner.Parent = tabButton
+        local btnCorner = Instance.new("UICorner")
+        btnCorner.CornerRadius = UDim.new(0, 8)
+        btnCorner.Parent = tabButton
 
         -- Иконка (если указана)
         if iconId then
             local icon = Instance.new("ImageLabel")
             icon.Size = UDim2.new(0, 24, 0, 24)
-            icon.Position = UDim2.new(0, 10, 0.5, -12)
+            icon.Position = UDim2.new(0, 12, 0.5, -12)
             icon.BackgroundTransparency = 1
             icon.Image = "rbxassetid://" .. iconId
             icon.ImageColor3 = Color3.fromRGB(220, 220, 220)
@@ -224,7 +262,7 @@ function BeautifulLibrary:CreateWindow(config)
         -- Текст
         local tabLabel = Instance.new("TextLabel")
         tabLabel.Size = UDim2.new(1, -30, 1, 0)
-        tabLabel.Position = UDim2.new(0, iconId and 40 or 15, 0, 0)
+        tabLabel.Position = UDim2.new(0, iconId and 45 or 15, 0, 0)
         tabLabel.BackgroundTransparency = 1
         tabLabel.Text = tabName
         tabLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -233,54 +271,54 @@ function BeautifulLibrary:CreateWindow(config)
         tabLabel.TextSize = 15
         tabLabel.Parent = tabButton
 
-        -- Контент вкладки
+        -- Контент вкладки (ScrollingFrame)
         local tabContent = Instance.new("ScrollingFrame")
         tabContent.Name = tabName .. "_Content"
-        tabContent.Size = UDim2.new(1, 0, 1, 0)
+        tabContent.Parent = ContentArea
         tabContent.BackgroundTransparency = 1
         tabContent.BorderSizePixel = 0
+        tabContent.Size = UDim2.new(1, 0, 1, 0)
         tabContent.ScrollBarThickness = 3
-        tabContent.ScrollBarImageColor3 = AccentColor
+        tabContent.ScrollBarImageColor3 = themeColor
         tabContent.Visible = false
         tabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
-        tabContent.ScrollingEnabled = true
         tabContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
-        tabContent.Parent = ContentContainer
+        tabContent.ScrollingEnabled = true
 
         local contentList = Instance.new("UIListLayout")
         contentList.Padding = UDim.new(0, 10)
         contentList.SortOrder = Enum.SortOrder.LayoutOrder
         contentList.Parent = tabContent
 
-        -- Анимация наведения на кнопку вкладки
+        -- Анимации при наведении
         tabButton.MouseEnter:Connect(function()
             if activeTab and activeTab.Button == tabButton then return end
-            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundTransparency = 0.75}):Play()
+            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundColor3 = Color3.fromRGB(55, 55, 65)}):Play()
         end)
         tabButton.MouseLeave:Connect(function()
             if activeTab and activeTab.Button == tabButton then return end
-            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundTransparency = 0.85}):Play()
+            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundColor3 = Color3.fromRGB(45, 45, 55)}):Play()
         end)
 
         -- Переключение вкладок
         tabButton.MouseButton1Click:Connect(function()
             if activeTab then
                 activeTab.Content.Visible = false
-                TweenService:Create(activeTab.Button, FAST_TWEEN, {BackgroundTransparency = 0.85}):Play()
+                TweenService:Create(activeTab.Button, FAST_TWEEN, {BackgroundColor3 = Color3.fromRGB(45, 45, 55)}):Play()
             end
             tabContent.Visible = true
-            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundTransparency = 0.6}):Play()
+            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundColor3 = themeColor}):Play()
             activeTab = { Button = tabButton, Content = tabContent }
         end)
 
-        -- Активируем первую вкладку автоматически
+        -- Активируем первую вкладку
         if not activeTab then
             tabContent.Visible = true
-            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundTransparency = 0.6}):Play()
+            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundColor3 = themeColor}):Play()
             activeTab = { Button = tabButton, Content = tabContent }
         end
 
-        tabs[tabName] = { Button = tabButton, Content = tabContent }
+        table.insert(tabs, {Button = tabButton, Content = tabContent})
 
         -- Объект вкладки для создания секций
         local tabObj = {}
@@ -292,28 +330,31 @@ function BeautifulLibrary:CreateWindow(config)
             sectionFrame.BackgroundTransparency = 1
             sectionFrame.Parent = tabContent
 
+            -- Заголовок секции
             local sectionLabel = Instance.new("TextLabel")
-            sectionLabel.Size = UDim2.new(1, 0, 0, 30)
+            sectionLabel.Size = UDim2.new(1, 0, 0, 28)
             sectionLabel.BackgroundTransparency = 1
             sectionLabel.Text = sectionName
             sectionLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
             sectionLabel.TextXAlignment = Enum.TextXAlignment.Left
             sectionLabel.Font = Enum.Font.GothamBold
-            sectionLabel.TextSize = 18
+            sectionLabel.TextSize = 16
             sectionLabel.Parent = sectionFrame
 
+            -- Линия-разделитель
             local line = Instance.new("Frame")
             line.Size = UDim2.new(1, 0, 0, 1)
-            line.Position = UDim2.new(0, 0, 0, 30)
-            line.BackgroundColor3 = AccentColor
-            line.BackgroundTransparency = 0.5
+            line.Position = UDim2.new(0, 0, 0, 28)
+            line.BackgroundColor3 = themeColor
+            line.BackgroundTransparency = 0.4
             line.BorderSizePixel = 0
             line.Parent = sectionFrame
 
+            -- Контейнер для элементов
             local elementContainer = Instance.new("Frame")
             elementContainer.Name = "ElementContainer"
             elementContainer.Size = UDim2.new(1, 0, 0, 10)
-            elementContainer.Position = UDim2.new(0, 0, 0, 40)
+            elementContainer.Position = UDim2.new(0, 0, 0, 35)
             elementContainer.BackgroundTransparency = 1
             elementContainer.Parent = sectionFrame
 
@@ -322,7 +363,6 @@ function BeautifulLibrary:CreateWindow(config)
             elementList.SortOrder = Enum.SortOrder.LayoutOrder
             elementList.Parent = elementContainer
 
-            -- Функция обновления размеров
             local function updateSectionSize()
                 local totalHeight = 0
                 for _, child in ipairs(elementContainer:GetChildren()) do
@@ -331,7 +371,7 @@ function BeautifulLibrary:CreateWindow(config)
                     end
                 end
                 elementContainer.Size = UDim2.new(1, 0, 0, totalHeight)
-                sectionFrame.Size = UDim2.new(1, 0, 0, totalHeight + 45)
+                sectionFrame.Size = UDim2.new(1, 0, 0, totalHeight + 40)
             end
 
             local sectionObj = {}
@@ -341,16 +381,13 @@ function BeautifulLibrary:CreateWindow(config)
                 local btnFrame = Instance.new("Frame")
                 btnFrame.Size = UDim2.new(1, 0, 0, 45)
                 btnFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-                btnFrame.BackgroundTransparency = 0.4
+                btnFrame.BackgroundTransparency = 0.3
                 btnFrame.BorderSizePixel = 0
                 btnFrame.Parent = elementContainer
 
-                local btnCorner = Instance.new("UICorner")
-                btnCorner.CornerRadius = UDim.new(0, 8)
-                btnCorner.Parent = btnFrame
-
-                createGradient(btnFrame, ThemeColor, AccentColor, 90)
-                btnFrame.UIGradient.Enabled = false
+                local frameCorner = Instance.new("UICorner")
+                frameCorner.CornerRadius = UDim.new(0, 8)
+                frameCorner.Parent = btnFrame
 
                 local btn = Instance.new("TextButton")
                 btn.Size = UDim2.new(1, 0, 1, 0)
@@ -362,13 +399,19 @@ function BeautifulLibrary:CreateWindow(config)
                 btn.TextStrokeTransparency = 0.9
                 btn.Parent = btnFrame
 
+                -- Эффекты при наведении
                 btn.MouseEnter:Connect(function()
-                    TweenService:Create(btnFrame, FAST_TWEEN, {BackgroundTransparency = 0.2}):Play()
+                    TweenService:Create(btnFrame, FAST_TWEEN, {BackgroundTransparency = 0.1}):Play()
+                    if not btnFrame:FindFirstChildOfClass("UIGradient") then
+                        createGradient(btnFrame, themeColor, accentColor, 90)
+                    end
                     btnFrame.UIGradient.Enabled = true
                 end)
                 btn.MouseLeave:Connect(function()
-                    TweenService:Create(btnFrame, FAST_TWEEN, {BackgroundTransparency = 0.4}):Play()
-                    btnFrame.UIGradient.Enabled = false
+                    TweenService:Create(btnFrame, FAST_TWEEN, {BackgroundTransparency = 0.3}):Play()
+                    if btnFrame:FindFirstChildOfClass("UIGradient") then
+                        btnFrame.UIGradient.Enabled = false
+                    end
                 end)
 
                 btn.MouseButton1Click:Connect(function()
@@ -384,13 +427,13 @@ function BeautifulLibrary:CreateWindow(config)
                 local togFrame = Instance.new("Frame")
                 togFrame.Size = UDim2.new(1, 0, 0, 45)
                 togFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-                togFrame.BackgroundTransparency = 0.4
+                togFrame.BackgroundTransparency = 0.3
                 togFrame.BorderSizePixel = 0
                 togFrame.Parent = elementContainer
 
-                local togCorner = Instance.new("UICorner")
-                togCorner.CornerRadius = UDim.new(0, 8)
-                togCorner.Parent = togFrame
+                local frameCorner = Instance.new("UICorner")
+                frameCorner.CornerRadius = UDim.new(0, 8)
+                frameCorner.Parent = togFrame
 
                 local label = Instance.new("TextLabel")
                 label.Size = UDim2.new(0.7, 0, 1, 0)
@@ -404,37 +447,37 @@ function BeautifulLibrary:CreateWindow(config)
                 label.Parent = togFrame
 
                 local toggleBtn = Instance.new("TextButton")
-                toggleBtn.Size = UDim2.new(0, 56, 0, 24)
-                toggleBtn.Position = UDim2.new(1, -70, 0.5, -12)
-                toggleBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 90)
+                toggleBtn.Size = UDim2.new(0, 50, 0, 24)
+                toggleBtn.Position = UDim2.new(1, -65, 0.5, -12)
+                toggleBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 90)
                 toggleBtn.BorderSizePixel = 0
                 toggleBtn.Text = ""
                 toggleBtn.AutoButtonColor = false
                 toggleBtn.Parent = togFrame
 
-                local togBtnCorner = Instance.new("UICorner")
-                togBtnCorner.CornerRadius = UDim.new(0, 12)
-                togBtnCorner.Parent = toggleBtn
+                local btnCorner = Instance.new("UICorner")
+                btnCorner.CornerRadius = UDim.new(0, 12)
+                btnCorner.Parent = toggleBtn
 
                 local knob = Instance.new("Frame")
-                knob.Size = UDim2.new(0, 20, 0, 20)
-                knob.Position = UDim2.new(0, 2, 0.5, -10)
+                knob.Size = UDim2.new(0, 18, 0, 18)
+                knob.Position = UDim2.new(0, 3, 0.5, -9)
                 knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 knob.BorderSizePixel = 0
                 knob.Parent = toggleBtn
 
                 local knobCorner = Instance.new("UICorner")
-                knobCorner.CornerRadius = UDim.new(0, 10)
+                knobCorner.CornerRadius = UDim.new(0, 9)
                 knobCorner.Parent = knob
 
                 local isOn = config.Default or false
                 local function updateToggle()
                     if isOn then
-                        TweenService:Create(toggleBtn, FAST_TWEEN, {BackgroundColor3 = AccentColor}):Play()
-                        TweenService:Create(knob, FAST_TWEEN, {Position = UDim2.new(1, -22, 0.5, -10)}):Play()
+                        TweenService:Create(toggleBtn, FAST_TWEEN, {BackgroundColor3 = themeColor}):Play()
+                        TweenService:Create(knob, FAST_TWEEN, {Position = UDim2.new(1, -21, 0.5, -9)}):Play()
                     else
-                        TweenService:Create(toggleBtn, FAST_TWEEN, {BackgroundColor3 = Color3.fromRGB(80, 80, 90)}):Play()
-                        TweenService:Create(knob, FAST_TWEEN, {Position = UDim2.new(0, 2, 0.5, -10)}):Play()
+                        TweenService:Create(toggleBtn, FAST_TWEEN, {BackgroundColor3 = Color3.fromRGB(70, 70, 90)}):Play()
+                        TweenService:Create(knob, FAST_TWEEN, {Position = UDim2.new(0, 3, 0.5, -9)}):Play()
                     end
                     if config.Callback then config.Callback(isOn) end
                 end
@@ -454,75 +497,75 @@ function BeautifulLibrary:CreateWindow(config)
                 local sldFrame = Instance.new("Frame")
                 sldFrame.Size = UDim2.new(1, 0, 0, 65)
                 sldFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-                sldFrame.BackgroundTransparency = 0.4
+                sldFrame.BackgroundTransparency = 0.3
                 sldFrame.BorderSizePixel = 0
                 sldFrame.Parent = elementContainer
 
-                local sldCorner = Instance.new("UICorner")
-                sldCorner.CornerRadius = UDim.new(0, 8)
-                sldCorner.Parent = sldFrame
+                local frameCorner = Instance.new("UICorner")
+                frameCorner.CornerRadius = UDim.new(0, 8)
+                frameCorner.Parent = sldFrame
 
-                local label = Instance.new("TextLabel")
-                label.Size = UDim2.new(1, -30, 0, 25)
-                label.Position = UDim2.new(0, 15, 0, 8)
-                label.BackgroundTransparency = 1
-                label.Text = config.Name or "Slider"
-                label.TextColor3 = Color3.fromRGB(240, 240, 240)
-                label.TextXAlignment = Enum.TextXAlignment.Left
-                label.Font = Enum.Font.GothamSemibold
-                label.TextSize = 15
-                label.Parent = sldFrame
+                local titleLabel = Instance.new("TextLabel")
+                titleLabel.Size = UDim2.new(1, -60, 0, 25)
+                titleLabel.Position = UDim2.new(0, 15, 0, 8)
+                titleLabel.BackgroundTransparency = 1
+                titleLabel.Text = config.Name or "Slider"
+                titleLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+                titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+                titleLabel.Font = Enum.Font.GothamSemibold
+                titleLabel.TextSize = 15
+                titleLabel.Parent = sldFrame
 
                 local valueLabel = Instance.new("TextLabel")
-                valueLabel.Size = UDim2.new(0, 50, 0, 25)
-                valueLabel.Position = UDim2.new(1, -60, 0, 8)
+                valueLabel.Size = UDim2.new(0, 40, 0, 25)
+                valueLabel.Position = UDim2.new(1, -45, 0, 8)
                 valueLabel.BackgroundTransparency = 1
-                valueLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-                valueLabel.Font = Enum.Font.Gotham
-                valueLabel.TextSize = 13
+                valueLabel.TextColor3 = themeColor
+                valueLabel.Font = Enum.Font.GothamBold
+                valueLabel.TextSize = 14
                 valueLabel.TextXAlignment = Enum.TextXAlignment.Right
                 valueLabel.Parent = sldFrame
 
-                local bar = Instance.new("Frame")
-                bar.Size = UDim2.new(1, -30, 0, 4)
-                bar.Position = UDim2.new(0, 15, 0, 42)
-                bar.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
-                bar.BorderSizePixel = 0
-                bar.Parent = sldFrame
+                local sliderBg = Instance.new("Frame")
+                sliderBg.Size = UDim2.new(1, -30, 0, 6)
+                sliderBg.Position = UDim2.new(0, 15, 0, 40)
+                sliderBg.BackgroundColor3 = Color3.fromRGB(60, 60, 75)
+                sliderBg.BorderSizePixel = 0
+                sliderBg.Parent = sldFrame
 
-                local barCorner = Instance.new("UICorner")
-                barCorner.CornerRadius = UDim.new(0, 2)
-                barCorner.Parent = bar
+                local bgCorner = Instance.new("UICorner")
+                bgCorner.CornerRadius = UDim.new(0, 3)
+                bgCorner.Parent = sliderBg
 
                 local fill = Instance.new("Frame")
                 fill.Size = UDim2.new(0, 0, 1, 0)
-                fill.BackgroundColor3 = AccentColor
+                fill.BackgroundColor3 = themeColor
                 fill.BorderSizePixel = 0
-                fill.Parent = bar
+                fill.Parent = sliderBg
 
                 local fillCorner = Instance.new("UICorner")
-                fillCorner.CornerRadius = UDim.new(0, 2)
+                fillCorner.CornerRadius = UDim.new(0, 3)
                 fillCorner.Parent = fill
 
-                createGradient(fill, ThemeColor, AccentColor, 0)
+                createGradient(fill, themeColor, accentColor, 0)
+
+                local knob = Instance.new("Frame")
+                knob.Size = UDim2.new(0, 14, 0, 14)
+                knob.Position = UDim2.new(0, -7, 0.5, -7)
+                knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                knob.BorderSizePixel = 0
+                knob.Parent = sliderBg
+
+                local knobCorner = Instance.new("UICorner")
+                knobCorner.CornerRadius = UDim.new(0, 7)
+                knobCorner.Parent = knob
 
                 local sliderBtn = Instance.new("TextButton")
                 sliderBtn.Size = UDim2.new(1, -30, 0, 20)
-                sliderBtn.Position = UDim2.new(0, 15, 0, 34)
+                sliderBtn.Position = UDim2.new(0, 15, 0, 33)
                 sliderBtn.BackgroundTransparency = 1
                 sliderBtn.Text = ""
                 sliderBtn.Parent = sldFrame
-
-                local knob = Instance.new("Frame")
-                knob.Size = UDim2.new(0, 16, 0, 16)
-                knob.Position = UDim2.new(0, -8, 0.5, -8)
-                knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                knob.BorderSizePixel = 0
-                knob.Parent = sliderBtn
-
-                local knobCorner = Instance.new("UICorner")
-                knobCorner.CornerRadius = UDim.new(0, 8)
-                knobCorner.Parent = knob
 
                 local minVal = config.Min or 0
                 local maxVal = config.Max or 100
@@ -533,14 +576,15 @@ function BeautifulLibrary:CreateWindow(config)
                 local function updateSlider(val)
                     local percent = (val - minVal) / (maxVal - minVal)
                     fill.Size = UDim2.new(percent, 0, 1, 0)
-                    knob.Position = UDim2.new(percent, -8, 0.5, -8)
+                    knob.Position = UDim2.new(percent, -7, 0.5, -7)
                     valueLabel.Text = tostring(val) .. suffix
+                    titleLabel.Text = config.Name .. " (" .. val .. suffix .. ")"
                     if config.Callback then config.Callback(val) end
                 end
 
                 local function setFromPos(x)
-                    local relX = math.clamp(x - bar.AbsolutePosition.X, 0, bar.AbsoluteSize.X)
-                    local percent = relX / bar.AbsoluteSize.X
+                    local relX = math.clamp(x - sliderBg.AbsolutePosition.X, 0, sliderBg.AbsoluteSize.X)
+                    local percent = relX / sliderBg.AbsoluteSize.X
                     local raw = minVal + (maxVal - minVal) * percent
                     local newVal = math.floor(raw / inc + 0.5) * inc
                     newVal = math.clamp(newVal, minVal, maxVal)
@@ -560,6 +604,20 @@ function BeautifulLibrary:CreateWindow(config)
                     end)
                 end)
 
+                knob.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        setFromPos(input.Position.X)
+                        local conn
+                        conn = RunService.RenderStepped:Connect(function()
+                            if not UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                                conn:Disconnect()
+                            else
+                                setFromPos(UserInputService:GetMouseLocation().X)
+                            end
+                        end)
+                    end
+                end)
+
                 updateSlider(current)
                 updateSectionSize()
                 return { Set = function(v) current = math.clamp(v, minVal, maxVal); updateSlider(current) end }
@@ -570,14 +628,14 @@ function BeautifulLibrary:CreateWindow(config)
                 local ddFrame = Instance.new("Frame")
                 ddFrame.Size = UDim2.new(1, 0, 0, 45)
                 ddFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-                ddFrame.BackgroundTransparency = 0.4
+                ddFrame.BackgroundTransparency = 0.3
                 ddFrame.BorderSizePixel = 0
                 ddFrame.ClipsDescendants = false
                 ddFrame.Parent = elementContainer
 
-                local ddCorner = Instance.new("UICorner")
-                ddCorner.CornerRadius = UDim.new(0, 8)
-                ddCorner.Parent = ddFrame
+                local frameCorner = Instance.new("UICorner")
+                frameCorner.CornerRadius = UDim.new(0, 8)
+                frameCorner.Parent = ddFrame
 
                 local btn = Instance.new("TextButton")
                 btn.Size = UDim2.new(1, 0, 1, 0)
@@ -609,6 +667,7 @@ function BeautifulLibrary:CreateWindow(config)
                 optsFrame.BorderSizePixel = 0
                 optsFrame.ClipsDescendants = true
                 optsFrame.Visible = false
+                optsFrame.ZIndex = 5
                 optsFrame.Parent = ddFrame
 
                 local optsCorner = Instance.new("UICorner")
@@ -639,7 +698,7 @@ function BeautifulLibrary:CreateWindow(config)
                     optBtn.Parent = optsFrame
 
                     optBtn.MouseEnter:Connect(function()
-                        TweenService:Create(optBtn, FAST_TWEEN, {BackgroundColor3 = AccentColor, BackgroundTransparency = 0.7}):Play()
+                        TweenService:Create(optBtn, FAST_TWEEN, {BackgroundColor3 = themeColor, BackgroundTransparency = 0.7}):Play()
                     end)
                     optBtn.MouseLeave:Connect(function()
                         TweenService:Create(optBtn, FAST_TWEEN, {BackgroundTransparency = 1}):Play()
@@ -665,20 +724,21 @@ function BeautifulLibrary:CreateWindow(config)
     end
 
     -- Метод уведомления
-    function BeautifulLibrary:Notify(config)
+    function Library:Notify(config)
         local notif = Instance.new("Frame")
-        notif.Size = UDim2.new(0, 320, 0, 70)
-        notif.Position = UDim2.new(1, -330, 0, 20)
-        notif.BackgroundColor3 = Color3.fromRGB(20, 20, 28)
+        notif.Size = UDim2.new(0, 300, 0, 70)
+        notif.Position = UDim2.new(1, -310, 0, 20)
+        notif.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
         notif.BackgroundTransparency = 0.1
         notif.BorderSizePixel = 0
+        notif.ZIndex = 20
         notif.Parent = ScreenGui
 
         local notifCorner = Instance.new("UICorner")
-        notifCorner.CornerRadius = UDim.new(0, 12)
+        notifCorner.CornerRadius = UDim.new(0, 10)
         notifCorner.Parent = notif
 
-        createGradient(notif, ThemeColor, AccentColor, 135)
+        createGradient(notif, themeColor, accentColor, 135)
         notif.UIGradient.Enabled = true
 
         local title = Instance.new("TextLabel")
@@ -690,6 +750,7 @@ function BeautifulLibrary:CreateWindow(config)
         title.TextXAlignment = Enum.TextXAlignment.Left
         title.Font = Enum.Font.GothamBold
         title.TextSize = 16
+        title.ZIndex = 21
         title.Parent = notif
 
         local content = Instance.new("TextLabel")
@@ -701,16 +762,36 @@ function BeautifulLibrary:CreateWindow(config)
         content.TextXAlignment = Enum.TextXAlignment.Left
         content.Font = Enum.Font.Gotham
         content.TextSize = 13
+        content.ZIndex = 21
         content.Parent = notif
 
-        TweenService:Create(notif, TWEEN_INFO, {Position = UDim2.new(1, -330, 0, 20)}):Play()
+        -- Анимация
+        notif.Position = UDim2.new(1, 20, 0, 20)
+        TweenService:Create(notif, TWEEN_INFO, {Position = UDim2.new(1, -310, 0, 20)}):Play()
         task.wait(config.Duration or 4)
         TweenService:Create(notif, TWEEN_INFO, {Position = UDim2.new(1, 20, 0, 20)}):Play()
         task.wait(0.3)
         notif:Destroy()
     end
 
-    return BeautifulLibrary
+    -- Показать окно с анимацией
+    MainFrame.Size = UDim2.new(0, 0, 0, 0)
+    MainFrame.Visible = true
+    TweenService:Create(MainFrame, TWEEN_INFO, {Size = originalSize}):Play()
+
+    -- Показать мини-кнопку при закрытии
+    if minimizable then
+        CloseButton.MouseButton1Click:Connect(function()
+            if MiniButton then
+                MiniButton.Visible = true
+                -- Анимация появления мини-кнопки
+                MiniButton.Size = UDim2.new(0, 0, 0, 0)
+                TweenService:Create(MiniButton, TWEEN_INFO, {Size = UDim2.new(0, 54, 0, 54)}):Play()
+            end
+        end)
+    end
+
+    return Library
 end
 
-return BeautifulLibrary
+return Library
