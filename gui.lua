@@ -1,4 +1,4 @@
--- Windows XP Style GUI Library for Roblox
+-- Windows XP Style GUI Library for Roblox (fixed fonts)
 -- Сохраните как ModuleScript
 
 local Library = {}
@@ -95,7 +95,7 @@ function Library:CreateWindow(config)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Size = UDim2.new(1, -80, 1, 0)
     TitleLabel.Position = UDim2.new(0, 28, 0, 0)
-    TitleLabel.Font = Enum.Font.Tahoma
+    TitleLabel.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО: Tahoma -> Gotham
     TitleLabel.Text = windowName
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     TitleLabel.TextSize = 13
@@ -123,7 +123,7 @@ function Library:CreateWindow(config)
         btn.BorderSizePixel = 1
         btn.BorderColor3 = Color3.fromRGB(255, 255, 255)
         btn.Size = UDim2.new(0, 24, 0, 20)
-        btn.Font = Enum.Font.Tahoma
+        btn.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
         btn.Text = text
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn.TextSize = 14
@@ -292,7 +292,7 @@ function Library:CreateWindow(config)
         tabLabel.Text = tabName
         tabLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
         tabLabel.TextXAlignment = Enum.TextXAlignment.Left
-        tabLabel.Font = Enum.Font.Tahoma
+        tabLabel.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
         tabLabel.TextSize = 13
         tabLabel.Parent = tabButton
 
@@ -362,7 +362,7 @@ function Library:CreateWindow(config)
             sectionLabel.Text = sectionName
             sectionLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
             sectionLabel.TextXAlignment = Enum.TextXAlignment.Left
-            sectionLabel.Font = Enum.Font.TahomaBold
+            sectionLabel.Font = Enum.Font.GothamBold  -- ИСПРАВЛЕНО: TahomaBold -> GothamBold
             sectionLabel.TextSize = 13
             sectionLabel.Parent = sectionFrame
 
@@ -414,7 +414,7 @@ function Library:CreateWindow(config)
                 btn.BackgroundTransparency = 1
                 btn.Text = config.Name or "Button"
                 btn.TextColor3 = Color3.fromRGB(0, 0, 0)
-                btn.Font = Enum.Font.Tahoma
+                btn.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
                 btn.TextSize = 13
                 btn.Parent = btnFrame
 
@@ -448,7 +448,7 @@ function Library:CreateWindow(config)
                 label.Text = config.Name or "Toggle"
                 label.TextColor3 = Color3.fromRGB(0, 0, 0)
                 label.TextXAlignment = Enum.TextXAlignment.Left
-                label.Font = Enum.Font.Tahoma
+                label.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
                 label.TextSize = 13
                 label.Parent = togFrame
 
@@ -509,7 +509,7 @@ function Library:CreateWindow(config)
                 titleLabel.Text = config.Name or "Slider"
                 titleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
                 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-                titleLabel.Font = Enum.Font.Tahoma
+                titleLabel.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
                 titleLabel.TextSize = 13
                 titleLabel.Parent = sldFrame
 
@@ -518,7 +518,7 @@ function Library:CreateWindow(config)
                 valueLabel.Position = UDim2.new(1, -48, 0, 4)
                 valueLabel.BackgroundTransparency = 1
                 valueLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-                valueLabel.Font = Enum.Font.Tahoma
+                valueLabel.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
                 valueLabel.TextSize = 13
                 valueLabel.TextXAlignment = Enum.TextXAlignment.Right
                 valueLabel.Parent = sldFrame
@@ -623,7 +623,7 @@ function Library:CreateWindow(config)
                 btn.BackgroundTransparency = 1
                 btn.Text = config.Name .. ": " .. (config.CurrentOption or config.Options[1])
                 btn.TextColor3 = Color3.fromRGB(0, 0, 0)
-                btn.Font = Enum.Font.Tahoma
+                btn.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
                 btn.TextSize = 13
                 btn.TextXAlignment = Enum.TextXAlignment.Left
                 btn.Parent = ddFrame
@@ -671,7 +671,7 @@ function Library:CreateWindow(config)
                     optBtn.BackgroundTransparency = 1
                     optBtn.Text = opt
                     optBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-                    optBtn.Font = Enum.Font.Tahoma
+                    optBtn.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
                     optBtn.TextSize = 13
                     optBtn.Parent = optsFrame
 
@@ -733,7 +733,7 @@ function Library:CreateWindow(config)
         title.Text = config.Title or "Notification"
         title.TextColor3 = Color3.fromRGB(255, 255, 255)
         title.TextXAlignment = Enum.TextXAlignment.Left
-        title.Font = Enum.Font.TahomaBold
+        title.Font = Enum.Font.GothamBold  -- ИСПРАВЛЕНО
         title.TextSize = 12
         title.ZIndex = 21
         title.Parent = titleBar
@@ -745,7 +745,7 @@ function Library:CreateWindow(config)
         content.Text = config.Content or "This is a notification"
         content.TextColor3 = Color3.fromRGB(0, 0, 0)
         content.TextXAlignment = Enum.TextXAlignment.Left
-        content.Font = Enum.Font.Tahoma
+        content.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
         content.TextSize = 12
         content.ZIndex = 21
         content.Parent = notif
