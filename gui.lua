@@ -1,4 +1,5 @@
--- Windows XP Style GUI Library for Roblox (fixed fonts)
+-- Ultimate Windows XP GUI Library for Roblox
+-- Максимально точная копия стиля Luna
 -- Сохраните как ModuleScript
 
 local Library = {}
@@ -6,13 +7,36 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 
--- Анимации (в стиле XP анимации почти нет, но оставим плавные для современности)
+-- Анимации (в стиле XP анимации почти нет, оставим плавные для современности)
 local TWEEN_INFO = TweenInfo.new(0.15, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
 local FAST_TWEEN = TweenInfo.new(0.1, Enum.EasingStyle.Linear)
 
+-- Цвета Windows XP (Luna Blue)
+local XPColors = {
+    TitleBarStart = Color3.fromRGB(0, 88, 227),     -- #0058E3 - Начало градиента
+    TitleBarEnd = Color3.fromRGB(60, 140, 255),     -- #3C8CFF - Конец градиента
+    WindowBackground = Color3.fromRGB(236, 233, 216), -- #ECE9D8 - Фон окна
+    TabPanel = Color3.fromRGB(212, 208, 200),        -- #D4D0C8 - Панель вкладок
+    Border = Color3.fromRGB(100, 100, 100),          -- #646464 - Границы
+    ButtonHighlight = Color3.fromRGB(255, 255, 255), -- #FFFFFF - Подсветка
+    ButtonPressed = Color3.fromRGB(200, 200, 200),   -- #C8C8C8 - Нажатая кнопка
+    DisabledText = Color3.fromRGB(161, 161, 146),    -- #A1A192 - Текст отключенного элемента
+    DisabledFill = Color3.fromRGB(235, 235, 228),    -- #EBEBE4 - Фон отключенного поля
+    CheckboxBorder = Color3.fromRGB(0, 0, 0),        -- #000000 - Граница чекбокса
+    CheckboxFill = Color3.fromRGB(255, 255, 255),    -- #FFFFFF - Фон чекбокса
+    ScrollbarShaft = Color3.fromRGB(212, 208, 200),  -- #D4D0C8 - Фон скроллбара
+    ScrollbarThumb = Color3.fromRGB(172, 168, 153),  -- #ACA899 - Ползунок скроллбара
+    ScrollbarArrow = Color3.fromRGB(0, 0, 0),        -- #000000 - Стрелки скроллбара
+    SliderThumb = Color3.fromRGB(172, 168, 153),     -- #ACA899 - Ползунок слайдера
+    GroupBoxBorder = Color3.fromRGB(208, 208, 191),  -- #D0D0BF - Граница групповой рамки
+    GroupBoxTitle = Color3.fromRGB(0, 70, 213)       -- #0046D5 - Заголовок групповой рамки
+}
+
 -- Вспомогательные функции
-local function createShadow(parent) -- в XP теней почти нет, оставим лёгкую
+local function createShadow(parent)
     local shadow = Instance.new("Frame")
     shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     shadow.BackgroundTransparency = 0.9
@@ -29,12 +53,6 @@ end
 function Library:CreateWindow(config)
     config = config or {}
     local windowName = config.Name or "XP Hub"
-    -- Цвета Windows XP
-    local xpBlue = Color3.fromRGB(0, 88, 227)        -- #0058E3
-    local xpBlueLight = Color3.fromRGB(60, 140, 255) -- градиент
-    local xpGray = Color3.fromRGB(236, 233, 216)     -- фон окна
-    local xpGrayDark = Color3.fromRGB(212, 208, 200) -- панель вкладок
-    local xpBorder = Color3.fromRGB(100, 100, 100)
     local minimizable = config.Minimizable ~= false
     local draggable = config.Draggable ~= false
 
@@ -49,9 +67,9 @@ function Library:CreateWindow(config)
     local MainFrame = Instance.new("Frame")
     MainFrame.Name = "Main"
     MainFrame.Parent = ScreenGui
-    MainFrame.BackgroundColor3 = xpGray
+    MainFrame.BackgroundColor3 = XPColors.WindowBackground
     MainFrame.BorderSizePixel = 1
-    MainFrame.BorderColor3 = xpBorder
+    MainFrame.BorderColor3 = XPColors.Border
     MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
     MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
     MainFrame.Size = UDim2.new(0, 550, 0, 380)
@@ -66,15 +84,15 @@ function Library:CreateWindow(config)
     local TitleBar = Instance.new("Frame")
     TitleBar.Name = "TitleBar"
     TitleBar.Parent = MainFrame
-    TitleBar.BackgroundColor3 = xpBlue
+    TitleBar.BackgroundColor3 = XPColors.TitleBarStart
     TitleBar.BorderSizePixel = 0
-    TitleBar.Size = UDim2.new(1, 0, 0, 30) -- классическая высота заголовка XP
+    TitleBar.Size = UDim2.new(1, 0, 0, 30)
 
     -- Градиент (сверху светлее, снизу темнее)
     local titleGradient = Instance.new("UIGradient")
     titleGradient.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, xpBlueLight),
-        ColorSequenceKeypoint.new(1, xpBlue)
+        ColorSequenceKeypoint.new(0, XPColors.TitleBarEnd),
+        ColorSequenceKeypoint.new(1, XPColors.TitleBarStart)
     })
     titleGradient.Rotation = 90
     titleGradient.Parent = TitleBar
@@ -85,7 +103,7 @@ function Library:CreateWindow(config)
     TitleIcon.BackgroundTransparency = 1
     TitleIcon.Size = UDim2.new(0, 16, 0, 16)
     TitleIcon.Position = UDim2.new(0, 6, 0.5, -8)
-    TitleIcon.Image = "rbxassetid://6031068421" -- любая иконка, можно заменить
+    TitleIcon.Image = "rbxassetid://6031068421"
     TitleIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
     TitleIcon.ScaleType = Enum.ScaleType.Fit
 
@@ -95,10 +113,10 @@ function Library:CreateWindow(config)
     TitleLabel.BackgroundTransparency = 1
     TitleLabel.Size = UDim2.new(1, -80, 1, 0)
     TitleLabel.Position = UDim2.new(0, 28, 0, 0)
-    TitleLabel.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО: Tahoma -> Gotham
+    TitleLabel.Font = Enum.Font.TahomaBold
     TitleLabel.Text = windowName
     TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    TitleLabel.TextSize = 13
+    TitleLabel.TextSize = 11
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
     -- Контейнер для кнопок управления (справа)
@@ -118,12 +136,12 @@ function Library:CreateWindow(config)
     -- Функция создания кнопки управления в стиле XP
     local function createXPControlButton(text, callback)
         local btn = Instance.new("TextButton")
-        btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        btn.BackgroundColor3 = XPColors.ButtonHighlight
         btn.BackgroundTransparency = 0.8
         btn.BorderSizePixel = 1
-        btn.BorderColor3 = Color3.fromRGB(255, 255, 255)
+        btn.BorderColor3 = XPColors.ButtonHighlight
         btn.Size = UDim2.new(0, 24, 0, 20)
-        btn.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
+        btn.Font = Enum.Font.Tahoma
         btn.Text = text
         btn.TextColor3 = Color3.fromRGB(255, 255, 255)
         btn.TextSize = 14
@@ -139,7 +157,7 @@ function Library:CreateWindow(config)
         btn.MouseLeave:Connect(function()
             TweenService:Create(btn, FAST_TWEEN, {
                 BackgroundTransparency = 0.8,
-                BorderColor3 = Color3.fromRGB(255, 255, 255)
+                BorderColor3 = XPColors.ButtonHighlight
             }):Play()
         end)
         btn.MouseButton1Click:Connect(callback)
@@ -152,9 +170,9 @@ function Library:CreateWindow(config)
         MiniButton = Instance.new("TextButton")
         MiniButton.Name = "MiniButton"
         MiniButton.Parent = ScreenGui
-        MiniButton.BackgroundColor3 = xpBlue
+        MiniButton.BackgroundColor3 = XPColors.TitleBarStart
         MiniButton.BorderSizePixel = 1
-        MiniButton.BorderColor3 = xpBorder
+        MiniButton.BorderColor3 = XPColors.Border
         MiniButton.Size = UDim2.new(0, 48, 0, 48)
         MiniButton.Position = UDim2.new(0.1, 0, 0.8, 0)
         MiniButton.Text = ""
@@ -167,8 +185,8 @@ function Library:CreateWindow(config)
         -- Градиент мини-кнопки
         local miniGrad = Instance.new("UIGradient")
         miniGrad.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, xpBlueLight),
-            ColorSequenceKeypoint.new(1, xpBlue)
+            ColorSequenceKeypoint.new(0, XPColors.TitleBarEnd),
+            ColorSequenceKeypoint.new(1, XPColors.TitleBarStart)
         })
         miniGrad.Rotation = 90
         miniGrad.Parent = MiniButton
@@ -178,7 +196,7 @@ function Library:CreateWindow(config)
         miniIcon.BackgroundTransparency = 1
         miniIcon.Size = UDim2.new(0, 24, 0, 24)
         miniIcon.Position = UDim2.new(0.5, -12, 0.5, -12)
-        miniIcon.Image = "rbxassetid://6026568198" -- иконка окна
+        miniIcon.Image = "rbxassetid://6026568198"
         miniIcon.ImageColor3 = Color3.fromRGB(255, 255, 255)
         miniIcon.Parent = MiniButton
 
@@ -186,12 +204,12 @@ function Library:CreateWindow(config)
 
         MiniButton.MouseEnter:Connect(function()
             TweenService:Create(MiniButton, FAST_TWEEN, {
-                BackgroundColor3 = xpBlue:Lerp(Color3.fromRGB(255,255,255), 0.2)
+                BackgroundColor3 = XPColors.TitleBarStart:Lerp(Color3.fromRGB(255,255,255), 0.2)
             }):Play()
         end)
         MiniButton.MouseLeave:Connect(function()
             TweenService:Create(MiniButton, FAST_TWEEN, {
-                BackgroundColor3 = xpBlue
+                BackgroundColor3 = XPColors.TitleBarStart
             }):Play()
         end)
 
@@ -204,7 +222,7 @@ function Library:CreateWindow(config)
         end)
     end
 
-    -- Кнопка сворачивания (минус/подчёркивание)
+    -- Кнопка сворачивания
     local MinimizeButton = createXPControlButton("–", function()
         if minimizable and MiniButton then
             MainFrame.Visible = false
@@ -214,7 +232,7 @@ function Library:CreateWindow(config)
         end
     end)
 
-    -- Кнопка закрытия (крестик)
+    -- Кнопка закрытия
     local CloseButton = createXPControlButton("✕", function()
         TweenService:Create(MainFrame, TWEEN_INFO, {Size = UDim2.new(0, 0, 0, 0)}):Play()
         task.wait(0.15)
@@ -225,9 +243,9 @@ function Library:CreateWindow(config)
     local TabPanel = Instance.new("Frame")
     TabPanel.Name = "TabPanel"
     TabPanel.Parent = MainFrame
-    TabPanel.BackgroundColor3 = xpGrayDark
+    TabPanel.BackgroundColor3 = XPColors.TabPanel
     TabPanel.BorderSizePixel = 1
-    TabPanel.BorderColor3 = xpBorder
+    TabPanel.BorderColor3 = XPColors.Border
     TabPanel.Size = UDim2.new(0, 140, 1, -30)
     TabPanel.Position = UDim2.new(0, 0, 0, 30)
 
@@ -246,7 +264,7 @@ function Library:CreateWindow(config)
     local ContentArea = Instance.new("Frame")
     ContentArea.Name = "ContentArea"
     ContentArea.Parent = MainFrame
-    ContentArea.BackgroundColor3 = xpGray
+    ContentArea.BackgroundColor3 = XPColors.WindowBackground
     ContentArea.BorderSizePixel = 0
     ContentArea.Size = UDim2.new(1, -140, 1, -30)
     ContentArea.Position = UDim2.new(0, 140, 0, 30)
@@ -267,9 +285,9 @@ function Library:CreateWindow(config)
         local tabButton = Instance.new("TextButton")
         tabButton.Name = tabName .. "_Tab"
         tabButton.Parent = TabPanel
-        tabButton.BackgroundColor3 = xpGray
+        tabButton.BackgroundColor3 = XPColors.WindowBackground
         tabButton.BorderSizePixel = 1
-        tabButton.BorderColor3 = xpBorder
+        tabButton.BorderColor3 = XPColors.Border
         tabButton.Size = UDim2.new(1, -8, 0, 32)
         tabButton.Text = ""
         tabButton.AutoButtonColor = false
@@ -292,23 +310,59 @@ function Library:CreateWindow(config)
         tabLabel.Text = tabName
         tabLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
         tabLabel.TextXAlignment = Enum.TextXAlignment.Left
-        tabLabel.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
-        tabLabel.TextSize = 13
+        tabLabel.Font = Enum.Font.Tahoma
+        tabLabel.TextSize = 11
         tabLabel.Parent = tabButton
 
-        -- Контент вкладки (ScrollingFrame)
+        -- Контент вкладки (ScrollingFrame) с новым скроллбаром
         local tabContent = Instance.new("ScrollingFrame")
         tabContent.Name = tabName .. "_Content"
         tabContent.Parent = ContentArea
         tabContent.BackgroundTransparency = 1
         tabContent.BorderSizePixel = 0
         tabContent.Size = UDim2.new(1, 0, 1, 0)
-        tabContent.ScrollBarThickness = 6
-        tabContent.ScrollBarImageColor3 = xpBlue
+        tabContent.ScrollBarThickness = 17
+        tabContent.ScrollBarImageColor3 = XPColors.ScrollbarThumb
+        tabContent.ScrollBarImageTransparency = 0
         tabContent.Visible = false
         tabContent.CanvasSize = UDim2.new(0, 0, 0, 0)
         tabContent.AutomaticCanvasSize = Enum.AutomaticSize.Y
         tabContent.ScrollingEnabled = true
+        
+        -- Настройка фона скроллбара
+        local scrollbar = Instance.new("Frame")
+        scrollbar.Name = "ScrollbarBackground"
+        scrollbar.BackgroundColor3 = XPColors.ScrollbarShaft
+        scrollbar.BorderSizePixel = 1
+        scrollbar.BorderColor3 = XPColors.Border
+        scrollbar.Size = UDim2.new(1, 0, 1, 0)
+        scrollbar.Visible = false
+        scrollbar.Parent = tabContent
+        
+        -- Кнопки скроллбара (вверх/вниз)
+        local upArrow = Instance.new("ImageButton")
+        upArrow.Name = "UpArrow"
+        upArrow.Size = UDim2.new(1, 0, 0, 17)
+        upArrow.Position = UDim2.new(0, 0, 0, 0)
+        upArrow.BackgroundColor3 = XPColors.ButtonHighlight
+        upArrow.BorderSizePixel = 1
+        upArrow.BorderColor3 = XPColors.Border
+        upArrow.Image = "rbxassetid://6031068421"
+        upArrow.ImageColor3 = XPColors.ScrollbarArrow
+        upArrow.Rotation = 0
+        upArrow.Parent = scrollbar
+        
+        local downArrow = Instance.new("ImageButton")
+        downArrow.Name = "DownArrow"
+        downArrow.Size = UDim2.new(1, 0, 0, 17)
+        downArrow.Position = UDim2.new(0, 0, 1, -17)
+        downArrow.BackgroundColor3 = XPColors.ButtonHighlight
+        downArrow.BorderSizePixel = 1
+        downArrow.BorderColor3 = XPColors.Border
+        downArrow.Image = "rbxassetid://6031068421"
+        downArrow.ImageColor3 = XPColors.ScrollbarArrow
+        downArrow.Rotation = 180
+        downArrow.Parent = scrollbar
 
         local contentList = Instance.new("UIListLayout")
         contentList.Padding = UDim.new(0, 8)
@@ -318,28 +372,28 @@ function Library:CreateWindow(config)
         -- Анимации при наведении
         tabButton.MouseEnter:Connect(function()
             if activeTab and activeTab.Button == tabButton then return end
-            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundColor3 = XPColors.ButtonHighlight}):Play()
         end)
         tabButton.MouseLeave:Connect(function()
             if activeTab and activeTab.Button == tabButton then return end
-            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundColor3 = xpGray}):Play()
+            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundColor3 = XPColors.WindowBackground}):Play()
         end)
 
         -- Переключение вкладок
         tabButton.MouseButton1Click:Connect(function()
             if activeTab then
                 activeTab.Content.Visible = false
-                TweenService:Create(activeTab.Button, FAST_TWEEN, {BackgroundColor3 = xpGray}):Play()
+                TweenService:Create(activeTab.Button, FAST_TWEEN, {BackgroundColor3 = XPColors.WindowBackground}):Play()
             end
             tabContent.Visible = true
-            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundColor3 = XPColors.ButtonHighlight}):Play()
             activeTab = { Button = tabButton, Content = tabContent }
         end)
 
         -- Активируем первую вкладку
         if not activeTab then
             tabContent.Visible = true
-            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+            TweenService:Create(tabButton, FAST_TWEEN, {BackgroundColor3 = XPColors.ButtonHighlight}):Play()
             activeTab = { Button = tabButton, Content = tabContent }
         end
 
@@ -360,17 +414,17 @@ function Library:CreateWindow(config)
             sectionLabel.Size = UDim2.new(1, 0, 0, 24)
             sectionLabel.BackgroundTransparency = 1
             sectionLabel.Text = sectionName
-            sectionLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+            sectionLabel.TextColor3 = XPColors.GroupBoxTitle
             sectionLabel.TextXAlignment = Enum.TextXAlignment.Left
-            sectionLabel.Font = Enum.Font.GothamBold  -- ИСПРАВЛЕНО: TahomaBold -> GothamBold
-            sectionLabel.TextSize = 13
+            sectionLabel.Font = Enum.Font.TahomaBold
+            sectionLabel.TextSize = 11
             sectionLabel.Parent = sectionFrame
 
             -- Линия-разделитель (тонкая, как в XP)
             local line = Instance.new("Frame")
             line.Size = UDim2.new(1, 0, 0, 1)
             line.Position = UDim2.new(0, 0, 0, 24)
-            line.BackgroundColor3 = xpBorder
+            line.BackgroundColor3 = XPColors.GroupBoxBorder
             line.BorderSizePixel = 0
             line.Parent = sectionFrame
 
@@ -400,13 +454,13 @@ function Library:CreateWindow(config)
 
             local sectionObj = {}
 
-            -- Кнопка в стиле XP
+            -- Кнопка в стиле XP (размер 75x23)
             function sectionObj:CreateButton(config)
                 local btnFrame = Instance.new("Frame")
-                btnFrame.Size = UDim2.new(1, 0, 0, 36)
-                btnFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                btnFrame.Size = UDim2.new(0, 75, 0, 23)
+                btnFrame.BackgroundColor3 = XPColors.ButtonHighlight
                 btnFrame.BorderSizePixel = 1
-                btnFrame.BorderColor3 = xpBorder
+                btnFrame.BorderColor3 = XPColors.Border
                 btnFrame.Parent = elementContainer
 
                 local btn = Instance.new("TextButton")
@@ -414,15 +468,24 @@ function Library:CreateWindow(config)
                 btn.BackgroundTransparency = 1
                 btn.Text = config.Name or "Button"
                 btn.TextColor3 = Color3.fromRGB(0, 0, 0)
-                btn.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
-                btn.TextSize = 13
+                btn.Font = Enum.Font.Tahoma
+                btn.TextSize = 11
                 btn.Parent = btnFrame
-
+                
+                -- Состояния кнопки
                 btn.MouseEnter:Connect(function()
                     TweenService:Create(btnFrame, FAST_TWEEN, {BackgroundColor3 = Color3.fromRGB(240, 240, 240)}):Play()
                 end)
                 btn.MouseLeave:Connect(function()
-                    TweenService:Create(btnFrame, FAST_TWEEN, {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
+                    TweenService:Create(btnFrame, FAST_TWEEN, {BackgroundColor3 = XPColors.ButtonHighlight}):Play()
+                end)
+                btn.MouseButton1Down:Connect(function()
+                    TweenService:Create(btnFrame, FAST_TWEEN, {BackgroundColor3 = XPColors.ButtonPressed}):Play()
+                    btn.Position = UDim2.new(0, 1, 0, 1)
+                end)
+                btn.MouseButton1Up:Connect(function()
+                    TweenService:Create(btnFrame, FAST_TWEEN, {BackgroundColor3 = XPColors.ButtonHighlight}):Play()
+                    btn.Position = UDim2.new(0, 0, 0, 0)
                 end)
                 btn.MouseButton1Click:Connect(function()
                     if config.Callback then config.Callback() end
@@ -432,122 +495,209 @@ function Library:CreateWindow(config)
                 return btn
             end
 
-            -- Тоггл (чекбокс в стиле XP)
+            -- Тоггл (чекбокс в стиле XP, размер 16x16)
             function sectionObj:CreateToggle(config)
                 local togFrame = Instance.new("Frame")
-                togFrame.Size = UDim2.new(1, 0, 0, 32)
-                togFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                togFrame.BorderSizePixel = 1
-                togFrame.BorderColor3 = xpBorder
+                togFrame.Size = UDim2.new(1, 0, 0, 22)
+                togFrame.BackgroundTransparency = 1
                 togFrame.Parent = elementContainer
 
-                local label = Instance.new("TextLabel")
-                label.Size = UDim2.new(0.7, 0, 1, 0)
-                label.Position = UDim2.new(0, 8, 0, 0)
-                label.BackgroundTransparency = 1
-                label.Text = config.Name or "Toggle"
-                label.TextColor3 = Color3.fromRGB(0, 0, 0)
-                label.TextXAlignment = Enum.TextXAlignment.Left
-                label.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
-                label.TextSize = 13
-                label.Parent = togFrame
-
                 local checkBox = Instance.new("ImageButton")
-                checkBox.Size = UDim2.new(0, 18, 0, 18)
-                checkBox.Position = UDim2.new(1, -28, 0.5, -9)
-                checkBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                checkBox.Size = UDim2.new(0, 16, 0, 16)
+                checkBox.Position = UDim2.new(0, 0, 0.5, -8)
+                checkBox.BackgroundColor3 = XPColors.CheckboxFill
                 checkBox.BorderSizePixel = 1
-                checkBox.BorderColor3 = xpBorder
+                checkBox.BorderColor3 = XPColors.CheckboxBorder
                 checkBox.Image = ""
                 checkBox.AutoButtonColor = false
                 checkBox.Parent = togFrame
 
                 local checkMark = Instance.new("ImageLabel")
-                checkMark.Size = UDim2.new(0, 12, 0, 12)
-                checkMark.Position = UDim2.new(0.5, -6, 0.5, -6)
+                checkMark.Size = UDim2.new(0, 10, 0, 10)
+                checkMark.Position = UDim2.new(0.5, -5, 0.5, -5)
                 checkMark.BackgroundTransparency = 1
-                checkMark.Image = "rbxassetid://6031068421" -- галочка
+                checkMark.Image = "rbxassetid://6031068421"
                 checkMark.ImageColor3 = Color3.fromRGB(0, 0, 0)
                 checkMark.Visible = false
                 checkMark.Parent = checkBox
 
+                local label = Instance.new("TextLabel")
+                label.Size = UDim2.new(1, -24, 1, 0)
+                label.Position = UDim2.new(0, 24, 0, 0)
+                label.BackgroundTransparency = 1
+                label.Text = config.Name or "Toggle"
+                label.TextColor3 = Color3.fromRGB(0, 0, 0)
+                label.TextXAlignment = Enum.TextXAlignment.Left
+                label.Font = Enum.Font.Tahoma
+                label.TextSize = 11
+                label.Parent = togFrame
+
                 local isOn = config.Default or false
+                local isEnabled = config.Enabled ~= false
+                
                 local function updateToggle()
                     checkMark.Visible = isOn
+                    if not isEnabled then
+                        checkBox.BorderColor3 = XPColors.DisabledText
+                        checkMark.ImageColor3 = XPColors.DisabledText
+                        label.TextColor3 = XPColors.DisabledText
+                    else
+                        checkBox.BorderColor3 = XPColors.CheckboxBorder
+                        checkMark.ImageColor3 = Color3.fromRGB(0, 0, 0)
+                        label.TextColor3 = Color3.fromRGB(0, 0, 0)
+                    end
                     if config.Callback then config.Callback(isOn) end
                 end
 
-                checkBox.MouseButton1Click:Connect(function()
+                local function toggle()
+                    if not isEnabled then return end
                     isOn = not isOn
                     updateToggle()
-                end)
+                end
+
+                checkBox.MouseButton1Click:Connect(toggle)
                 label.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        isOn = not isOn
-                        updateToggle()
+                        toggle()
                     end
                 end)
 
                 updateToggle()
                 updateSectionSize()
-                return { Set = function(v) isOn = v; updateToggle() end }
+                return { 
+                    Set = function(v) isOn = v; updateToggle() end,
+                    SetEnabled = function(v) isEnabled = v; updateToggle() end
+                }
+            end
+
+            -- RadioButton в стиле XP (размер 16x16)
+            function sectionObj:CreateRadio(config)
+                local radioFrame = Instance.new("Frame")
+                radioFrame.Size = UDim2.new(1, 0, 0, 22)
+                radioFrame.BackgroundTransparency = 1
+                radioFrame.Parent = elementContainer
+
+                local radioButton = Instance.new("ImageButton")
+                radioButton.Size = UDim2.new(0, 16, 0, 16)
+                radioButton.Position = UDim2.new(0, 0, 0.5, -8)
+                radioButton.BackgroundColor3 = XPColors.CheckboxFill
+                radioButton.BorderSizePixel = 1
+                radioButton.BorderColor3 = XPColors.CheckboxBorder
+                radioButton.Image = ""
+                radioButton.AutoButtonColor = false
+                radioButton.Parent = radioFrame
+
+                local radioDot = Instance.new("ImageLabel")
+                radioDot.Size = UDim2.new(0, 8, 0, 8)
+                radioDot.Position = UDim2.new(0.5, -4, 0.5, -4)
+                radioDot.BackgroundTransparency = 1
+                radioDot.Image = "rbxassetid://6031068421"
+                radioDot.ImageColor3 = Color3.fromRGB(0, 0, 0)
+                radioDot.Visible = false
+                radioDot.Parent = radioButton
+
+                local label = Instance.new("TextLabel")
+                label.Size = UDim2.new(1, -24, 1, 0)
+                label.Position = UDim2.new(0, 24, 0, 0)
+                label.BackgroundTransparency = 1
+                label.Text = config.Name or "Radio"
+                label.TextColor3 = Color3.fromRGB(0, 0, 0)
+                label.TextXAlignment = Enum.TextXAlignment.Left
+                label.Font = Enum.Font.Tahoma
+                label.TextSize = 11
+                label.Parent = radioFrame
+
+                local isOn = config.Default or false
+                local isEnabled = config.Enabled ~= false
+                
+                local function updateRadio()
+                    radioDot.Visible = isOn
+                    if not isEnabled then
+                        radioButton.BorderColor3 = XPColors.DisabledText
+                        radioDot.ImageColor3 = XPColors.DisabledText
+                        label.TextColor3 = XPColors.DisabledText
+                    else
+                        radioButton.BorderColor3 = XPColors.CheckboxBorder
+                        radioDot.ImageColor3 = Color3.fromRGB(0, 0, 0)
+                        label.TextColor3 = Color3.fromRGB(0, 0, 0)
+                    end
+                    if config.Callback then config.Callback(isOn) end
+                end
+
+                local function select()
+                    if not isEnabled then return end
+                    isOn = true
+                    updateRadio()
+                end
+
+                radioButton.MouseButton1Click:Connect(select)
+                label.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        select()
+                    end
+                end)
+
+                updateRadio()
+                updateSectionSize()
+                return { 
+                    Set = function(v) isOn = v; updateRadio() end,
+                    SetEnabled = function(v) isEnabled = v; updateRadio() end
+                }
             end
 
             -- Слайдер в стиле XP
             function sectionObj:CreateSlider(config)
                 local sldFrame = Instance.new("Frame")
                 sldFrame.Size = UDim2.new(1, 0, 0, 56)
-                sldFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                sldFrame.BorderSizePixel = 1
-                sldFrame.BorderColor3 = xpBorder
+                sldFrame.BackgroundTransparency = 1
                 sldFrame.Parent = elementContainer
 
                 local titleLabel = Instance.new("TextLabel")
                 titleLabel.Size = UDim2.new(1, -16, 0, 20)
-                titleLabel.Position = UDim2.new(0, 8, 0, 4)
+                titleLabel.Position = UDim2.new(0, 0, 0, 4)
                 titleLabel.BackgroundTransparency = 1
                 titleLabel.Text = config.Name or "Slider"
                 titleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
                 titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-                titleLabel.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
-                titleLabel.TextSize = 13
+                titleLabel.Font = Enum.Font.Tahoma
+                titleLabel.TextSize = 11
                 titleLabel.Parent = sldFrame
 
                 local valueLabel = Instance.new("TextLabel")
                 valueLabel.Size = UDim2.new(0, 40, 0, 20)
-                valueLabel.Position = UDim2.new(1, -48, 0, 4)
+                valueLabel.Position = UDim2.new(1, -40, 0, 4)
                 valueLabel.BackgroundTransparency = 1
                 valueLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-                valueLabel.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
-                valueLabel.TextSize = 13
+                valueLabel.Font = Enum.Font.Tahoma
+                valueLabel.TextSize = 11
                 valueLabel.TextXAlignment = Enum.TextXAlignment.Right
                 valueLabel.Parent = sldFrame
 
                 local sliderBg = Instance.new("Frame")
-                sliderBg.Size = UDim2.new(1, -16, 0, 6)
-                sliderBg.Position = UDim2.new(0, 8, 0, 32)
-                sliderBg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                sliderBg.Size = UDim2.new(1, 0, 0, 6)
+                sliderBg.Position = UDim2.new(0, 0, 0, 32)
+                sliderBg.BackgroundColor3 = XPColors.ButtonHighlight
                 sliderBg.BorderSizePixel = 1
-                sliderBg.BorderColor3 = xpBorder
+                sliderBg.BorderColor3 = XPColors.Border
                 sliderBg.Parent = sldFrame
 
                 local fill = Instance.new("Frame")
                 fill.Size = UDim2.new(0, 0, 1, 0)
-                fill.BackgroundColor3 = xpBlue
+                fill.BackgroundColor3 = XPColors.TitleBarStart
                 fill.BorderSizePixel = 0
                 fill.Parent = sliderBg
 
                 local knob = Instance.new("Frame")
                 knob.Size = UDim2.new(0, 10, 0, 16)
                 knob.Position = UDim2.new(0, -5, 0.5, -8)
-                knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                knob.BackgroundColor3 = XPColors.SliderThumb
                 knob.BorderSizePixel = 1
-                knob.BorderColor3 = xpBorder
+                knob.BorderColor3 = XPColors.Border
                 knob.Parent = sliderBg
 
                 local sliderBtn = Instance.new("TextButton")
-                sliderBtn.Size = UDim2.new(1, -16, 0, 20)
-                sliderBtn.Position = UDim2.new(0, 8, 0, 25)
+                sliderBtn.Size = UDim2.new(1, 0, 0, 20)
+                sliderBtn.Position = UDim2.new(0, 0, 0, 25)
                 sliderBtn.BackgroundTransparency = 1
                 sliderBtn.Text = ""
                 sliderBtn.Parent = sldFrame
@@ -611,32 +761,39 @@ function Library:CreateWindow(config)
             -- Выпадающий список в стиле XP
             function sectionObj:CreateDropdown(config)
                 local ddFrame = Instance.new("Frame")
-                ddFrame.Size = UDim2.new(1, 0, 0, 36)
-                ddFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                ddFrame.BorderSizePixel = 1
-                ddFrame.BorderColor3 = xpBorder
+                ddFrame.Size = UDim2.new(1, 0, 0, 30)
+                ddFrame.BackgroundTransparency = 1
                 ddFrame.ClipsDescendants = false
                 ddFrame.Parent = elementContainer
+
+                local btnFrame = Instance.new("Frame")
+                btnFrame.Size = UDim2.new(1, 0, 0, 23)
+                btnFrame.BackgroundColor3 = XPColors.ButtonHighlight
+                btnFrame.BorderSizePixel = 1
+                btnFrame.BorderColor3 = XPColors.Border
+                btnFrame.Parent = ddFrame
 
                 local btn = Instance.new("TextButton")
                 btn.Size = UDim2.new(1, 0, 1, 0)
                 btn.BackgroundTransparency = 1
                 btn.Text = config.Name .. ": " .. (config.CurrentOption or config.Options[1])
                 btn.TextColor3 = Color3.fromRGB(0, 0, 0)
-                btn.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
-                btn.TextSize = 13
+                btn.Font = Enum.Font.Tahoma
+                btn.TextSize = 11
                 btn.TextXAlignment = Enum.TextXAlignment.Left
-                btn.Parent = ddFrame
+                btn.Parent = btnFrame
 
                 local padding = Instance.new("UIPadding")
-                padding.PaddingLeft = UDim.new(0, 8)
+                padding.PaddingLeft = UDim.new(0, 4)
                 padding.Parent = btn
 
-                local arrow = Instance.new("ImageLabel")
-                arrow.Size = UDim2.new(0, 16, 0, 16)
-                arrow.Position = UDim2.new(1, -24, 0.5, -8)
-                arrow.BackgroundTransparency = 1
-                arrow.Image = "rbxassetid://6031068421" -- стрелка вниз
+                local arrow = Instance.new("ImageButton")
+                arrow.Size = UDim2.new(0, 17, 0, 17)
+                arrow.Position = UDim2.new(1, -17, 0.5, -8)
+                arrow.BackgroundColor3 = XPColors.ButtonHighlight
+                arrow.BorderSizePixel = 1
+                arrow.BorderColor3 = XPColors.Border
+                arrow.Image = "rbxassetid://6031068421"
                 arrow.ImageColor3 = Color3.fromRGB(0, 0, 0)
                 arrow.Rotation = 90
                 arrow.Parent = ddFrame
@@ -644,9 +801,9 @@ function Library:CreateWindow(config)
                 local optsFrame = Instance.new("Frame")
                 optsFrame.Size = UDim2.new(1, 0, 0, 0)
                 optsFrame.Position = UDim2.new(0, 0, 1, 2)
-                optsFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                optsFrame.BackgroundColor3 = XPColors.ButtonHighlight
                 optsFrame.BorderSizePixel = 1
-                optsFrame.BorderColor3 = xpBorder
+                optsFrame.BorderColor3 = XPColors.Border
                 optsFrame.ClipsDescendants = true
                 optsFrame.Visible = false
                 optsFrame.ZIndex = 5
@@ -661,22 +818,35 @@ function Library:CreateWindow(config)
                     optsFrame.Visible = not optsFrame.Visible
                     arrow.Rotation = optsFrame.Visible and -90 or 90
                     if optsFrame.Visible then
-                        optsFrame.Size = UDim2.new(1, 0, 0, #config.Options * 30)
+                        optsFrame.Size = UDim2.new(1, 0, 0, #config.Options * 23)
+                    end
+                end)
+                
+                arrow.MouseButton1Click:Connect(function()
+                    optsFrame.Visible = not optsFrame.Visible
+                    arrow.Rotation = optsFrame.Visible and -90 or 90
+                    if optsFrame.Visible then
+                        optsFrame.Size = UDim2.new(1, 0, 0, #config.Options * 23)
                     end
                 end)
 
                 for _, opt in ipairs(config.Options) do
                     local optBtn = Instance.new("TextButton")
-                    optBtn.Size = UDim2.new(1, 0, 0, 30)
+                    optBtn.Size = UDim2.new(1, 0, 0, 23)
                     optBtn.BackgroundTransparency = 1
                     optBtn.Text = opt
                     optBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-                    optBtn.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
-                    optBtn.TextSize = 13
+                    optBtn.Font = Enum.Font.Tahoma
+                    optBtn.TextSize = 11
+                    optBtn.TextXAlignment = Enum.TextXAlignment.Left
                     optBtn.Parent = optsFrame
+                    
+                    local optPadding = Instance.new("UIPadding")
+                    optPadding.PaddingLeft = UDim.new(0, 4)
+                    optPadding.Parent = optBtn
 
                     optBtn.MouseEnter:Connect(function()
-                        TweenService:Create(optBtn, FAST_TWEEN, {BackgroundColor3 = xpBlue, BackgroundTransparency = 0.7}):Play()
+                        TweenService:Create(optBtn, FAST_TWEEN, {BackgroundColor3 = XPColors.TitleBarStart, BackgroundTransparency = 0.7}):Play()
                     end)
                     optBtn.MouseLeave:Connect(function()
                         TweenService:Create(optBtn, FAST_TWEEN, {BackgroundTransparency = 1}):Play()
@@ -706,22 +876,22 @@ function Library:CreateWindow(config)
         local notif = Instance.new("Frame")
         notif.Size = UDim2.new(0, 260, 0, 70)
         notif.Position = UDim2.new(1, -270, 0, 20)
-        notif.BackgroundColor3 = xpGray
+        notif.BackgroundColor3 = XPColors.WindowBackground
         notif.BorderSizePixel = 1
-        notif.BorderColor3 = xpBorder
+        notif.BorderColor3 = XPColors.Border
         notif.ZIndex = 20
         notif.Parent = ScreenGui
 
         local titleBar = Instance.new("Frame")
         titleBar.Size = UDim2.new(1, 0, 0, 24)
-        titleBar.BackgroundColor3 = xpBlue
+        titleBar.BackgroundColor3 = XPColors.TitleBarStart
         titleBar.BorderSizePixel = 0
         titleBar.Parent = notif
 
         local titleGrad = Instance.new("UIGradient")
         titleGrad.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, xpBlueLight),
-            ColorSequenceKeypoint.new(1, xpBlue)
+            ColorSequenceKeypoint.new(0, XPColors.TitleBarEnd),
+            ColorSequenceKeypoint.new(1, XPColors.TitleBarStart)
         })
         titleGrad.Rotation = 90
         titleGrad.Parent = titleBar
@@ -733,8 +903,8 @@ function Library:CreateWindow(config)
         title.Text = config.Title or "Notification"
         title.TextColor3 = Color3.fromRGB(255, 255, 255)
         title.TextXAlignment = Enum.TextXAlignment.Left
-        title.Font = Enum.Font.GothamBold  -- ИСПРАВЛЕНО
-        title.TextSize = 12
+        title.Font = Enum.Font.TahomaBold
+        title.TextSize = 11
         title.ZIndex = 21
         title.Parent = titleBar
 
@@ -745,8 +915,8 @@ function Library:CreateWindow(config)
         content.Text = config.Content or "This is a notification"
         content.TextColor3 = Color3.fromRGB(0, 0, 0)
         content.TextXAlignment = Enum.TextXAlignment.Left
-        content.Font = Enum.Font.Gotham  -- ИСПРАВЛЕНО
-        content.TextSize = 12
+        content.Font = Enum.Font.Tahoma
+        content.TextSize = 11
         content.ZIndex = 21
         content.Parent = notif
 
